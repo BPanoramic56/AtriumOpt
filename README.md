@@ -1,6 +1,6 @@
 # AtriumOpt
 '''
-Author:     Bruno G. Pascotto
+Author:     Bruno G. Pascott\n
 GitHub ID:  BPanoramic56
 Repo:       https://github.com/BPanoramic56/AtriumOpt
 Date:       01/25/2024
