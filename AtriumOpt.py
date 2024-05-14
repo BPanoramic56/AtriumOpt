@@ -1,19 +1,23 @@
 #region imports
-from time       import sleep
-from time       import time
-from sys        import exit
-from colorama   import Back
-from selenium   import webdriver
-from selenium.webdriver.common.by       import By
-from selenium.webdriver.support.ui      import WebDriverWait
-from selenium.webdriver.support         import expected_conditions as EC
-from selenium.webdriver.support.ui      import Select
-from selenium.common.exceptions         import NoSuchElementException
+from time                           import sleep
+from time                           import time
+from sys                            import exit
+from colorama                       import Back
+from selenium                       import webdriver
+from selenium                       import webdriver
+from selenium.webdriver.common.by   import By
+from selenium.webdriver.support.ui  import WebDriverWait
+from selenium.webdriver.support     import expected_conditions as EC
+from selenium.webdriver.support.ui  import Select
+from selenium.common.exceptions     import NoSuchElementException
+import logging
 #endregion
 
 #region constants
 URL = r"https://utah.atriumcampus.com"
 MAX_RETRYS = 3
+
+logging.basicConfig(filename = "AtriumOptLogger.txt", filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 #endregion
 
 class color:
@@ -42,16 +46,18 @@ class AtriumCrawler:
         if self.driver:
             self.driver.quit()
 
-    def login(self):
+    def login(self):        
         self.driver.get(URL)
         self.driver.maximize_window()
-        WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@role='button' and text()='Local']"))).click()
-
+        element = WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, "//div[@role='button' and text()='Local']")))
+        self.driver.execute_script("arguments[0].click();", element)
+        
         retry_count = 0
+
         while retry_count < MAX_RETRYS:
             try:
-                self.driver.find_element(By.NAME, 'username').send_keys(self.username)
-                self.driver.find_element(By.NAME, 'password').send_keys(self.password)
+                self.driver.find_element(By.NAME, 'username').clear().send_keys(self.username)
+                self.driver.find_element(By.NAME, 'password').clear().send_keys(self.password)
                 WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.NAME, "login"))).click()                
                 self.main_page = self.driver.current_window_handle
                 WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'People')]"))).click()
@@ -187,11 +193,19 @@ class AtriumCrawler:
 
 while True:
     if __name__ == "__main__":
-        card_list = (input("Card numbers: ")).split(", ")
-        new_access_list = (input("New card access: ")).split(", ")
+        # card_list = (input("Card numbers: ")).split(", ")
+        # new_access_list = (input("New card access: ")).split(", ")
         username = r"01443182"
         password = r"Bgp1112@Atrium"
+        card_list = ["01443182"]
+        new_access_list = ["HRE MHC"]
 
-        with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
-            crawler.login()
-            crawler.run()
+        try:
+            with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
+                crawler.login()
+                print("Logging In succesful")
+                sleep(10)
+                print("Running")
+                crawler.run()
+        except Exception as e:
+            print("There was a problem in the operation")
