@@ -19,9 +19,9 @@ MAX_RETRYS = 3
 
 config = configparser.ConfigParser()
 config.read("configurations.ini")
-SleepTime = int(config["Script Information"]["Sleep"])
-WaitTime = int(config["Script Information"]["Wait"])
-ErrorTime = int(config["Script Information"]["Error"])
+SleepTime   = int(config["Script Information"]["Sleep"])
+WaitTime    = int(config["Script Information"]["Wait"])
+ErrorTime   = int(config["Script Information"]["Error"])
 
 logging.basicConfig(filename = "AtriumOptLogger.txt", filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 #endregion
@@ -42,12 +42,11 @@ class AtriumCrawler:
         self.card_list = card_list
         self.new_access_list = new_access_list
         self.pages_accessed = []
-        self.driver = None
+        self.driver = webdriver.Safari()
         self.main_page = None
 
     def __enter__(self):
         print("Initiating Driver")
-        self.driver = webdriver.Safari()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -86,7 +85,7 @@ class AtriumCrawler:
                     WebDriverWait(self.driver, WaitTime).until(element_disappeared)
                     print("Element has disappeared from the page.")
                 except Exception as e:
-                    print("Element was not found within the timeout period, or it did not disappear within the timeout period.\n\t %(e)s")
+                    print("Element was not found within the timeout period, or it did not disappear within the timeout period.\n\t %s", e)
                     sleep(ErrorTime)
 
 
@@ -236,6 +235,7 @@ class AtriumCrawler:
     def run(self):
         print("Initiating Run")
         start_session = time()
+        self.login()
         for card in self.card_list:
             start_card = time()
             self.access_search_bar()
@@ -260,13 +260,16 @@ if __name__ == "__main__":
     password = input("Password: ")
     # card_list = ["527166", "496287"]
     # new_access_list = ["CONF MHC", "CONF 821"]
-    
-    try:
-        with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
-            crawler.login()
-            print("Logging In succesful")
-            sleep(SleepTime)
-            print("Running")
-            crawler.run()
-    except Exception as e:
-        print("There was a problem in the operation")
+
+    # SQLHandler.create_server_connection()
+    # SQLHandler.change_card(card_list[0], new_access_list, username)
+
+    # try:
+    #     with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
+    #         crawler.login()
+    #         print("Logging In succesful")
+    #         sleep(SleepTime)
+    #         print("Running")
+    #         crawler.run()
+    # except Exception as e:
+    #     print("There was a problem in the operation")
