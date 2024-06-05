@@ -17,7 +17,7 @@ import logging
 URL = r"https://utah.atriumcampus.com"
 MAX_RETRYS = 3
 
-config = configparser.ConfigParser()
+config      = configparser.ConfigParser()
 config.read("configurations.ini")
 SleepTime   = int(config["Script Information"]["Sleep"])
 WaitTime    = int(config["Script Information"]["Wait"])
@@ -61,7 +61,7 @@ class AtriumCrawler:
         element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, "//div[@role='button' and text()='SSO Login']")))        
         self.driver.execute_script("arguments[0].click();", element)
         retry_count = 0
-        sleep(int(SleepTime))
+        sleep(SleepTime)
         while retry_count < MAX_RETRYS:
             try:
                 username_element = self.driver.find_element(By.ID, 'username')
@@ -70,37 +70,37 @@ class AtriumCrawler:
                 password_element = self.driver.find_element(By.ID, 'password')
                 password_element.send_keys(self.password)
                 element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.NAME, "submit")))
-                print("Element: " + str(element))
                 sleep(SleepTime)
                 self.driver.execute_script("arguments[0].click();", element)        
 
-                try:
-                    # Check if the element is present
-                    element_present = EC.presence_of_element_located((By.XPATH, "Check for a Duo Push"))
-                    WebDriverWait(self.driver, WaitTime).until(element_present)
-                    print("Element is present on the page.")
+                try_count = 0
+                while try_count < MAX_RETRYS:
+                    try:
+                        # Check if the element is present
+                        element_present = EC.presence_of_element_located((By.ID, "header-text"))
+                        WebDriverWait(self.driver, WaitTime).until(element_present)
+                        print("Element is present on the page.")
 
-                    # Wait for the element to disappear
-                    element_disappeared = EC.invisibility_of_element_located((By.ID, 'element_id'))
-                    WebDriverWait(self.driver, WaitTime).until(element_disappeared)
-                    print("Element has disappeared from the page.")
-                except Exception as e:
-                    print("Element was not found within the timeout period, or it did not disappear within the timeout period.\n\t %s", e)
-                    sleep(ErrorTime)
-
+                        # Wait for the element to disappear
+                        element_disappeared = EC.invisibility_of_element_located((By.ID, 'header-text'))
+                        WebDriverWait(self.driver, WaitTime).until(element_disappeared)
+                        print("Element has disappeared from the page.")
+                        break
+                    except Exception as e:
+                        print(f"Element was not found within the timeout period, or it did not disappear within the timeout period.\n\t {e}")
+                        sleep(ErrorTime)
+                        try_count+=1
+                        continue
 
                 element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID, "dont-trust-browser-button")))
-                print("Element: " + str(element))
                 sleep(SleepTime)
                 self.driver.execute_script("arguments[0].click();", element)        
                 sleep(SleepTime)
-                print("Element Clicked")
-                self.main_page = self.driver.current_window_handle
-                WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'People')]"))).click()
                 break
+
             except Exception as e:
                 retry_count += 1
-                print("Failure while trying to log in\nRestarting Operation (#%i)\nError Source: %s" % (retry_count, e))
+                print(f"Failure while trying to log in\nRestarting Operation ({retry_count})\nError Source: {e}")
                 sleep(ErrorTime)
                 if self.check_login_error():
                     print("Username or Password information incorrect\nClosing operation")
@@ -118,6 +118,13 @@ class AtriumCrawler:
         return True
 
     def access_search_bar(self):
+        print("Finding people")
+        self.main_page = self.driver.current_window_handle
+        print("A")
+        element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, f"//a[@href='https://utah.atriumcampus.com/people']")))
+        element.click()
+        print("B")
+
         print("Initiating Access Search Bar")
         sleep(SleepTime)
         retry_count = 0
@@ -128,7 +135,7 @@ class AtriumCrawler:
                 break
             except Exception as e:
                 retry_count += 1
-                print("Trouble when accesing and choosing ID in drop-down search bar\nRestarting operation (#%i)\nError source: %s" % (retry_count, e))
+                print(f"Trouble when accesing and choosing ID in drop-down search bar\nRestarting operation ({retry_count})\nError source: {e}")
                 sleep(ErrorTime)
                 continue
         if (retry_count == MAX_RETRYS):
@@ -152,12 +159,12 @@ class AtriumCrawler:
 
             except Exception as e:
                 retry_count += 1
-                print("Error finding and/or clicking on chosen card\nRestarting operation (#%i)\nError source: %s" %(retry_count, e))
+                print(f"Error finding and/or clicking on chosen card\nRestarting operation ({retry_count})\nError source: {e}")
                 sleep(ErrorTime)
                 continue
 
         if (retry_count == MAX_RETRYS):
-            print("Operation failed, exit code: 0\nSkipping current card (%i)" % (card_number))
+            print(f"Operation failed, exit code: 0\nSkipping current card ({card_number})")
             return
 
     def find_access(self, card):
@@ -199,7 +206,7 @@ class AtriumCrawler:
         print("Initiating Open Edit")
         try:
             self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
-            WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body"))).click()
+            # WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body"))).click()
             sleep(SleepTime)
             accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
             print(accordion_buttons)
@@ -213,7 +220,7 @@ class AtriumCrawler:
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'lft_rgt_opts') and contains(@class, 'bulk_move')]"))
         )
         rgt_opt_button = parent_div.find_element(By.XPATH, ".//button[contains(@class, 'rgt_opt')]")
-        self.driver.execute_script("arguments[0].click();", rgt_opt_button)    
+        self.driver.execute_script("arguments[0].click();", rgt_opt_button) 
         print(len(new_access_list))    
         if (len(new_access_list) == 0 or new_access_list[0] == "None"):
             WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,'//input[@value="Save"]'))).click()
@@ -253,23 +260,25 @@ class AtriumCrawler:
         print("%sSession took %.2f seconds%s" % (color.grey, time() - start_session, color.default))
 
 if __name__ == "__main__":
-    card_list = (input("Card numbers: ")).split(", ")
-    new_access_list = (input("New card access: ")).split(", ")    
-    new_access_list = [item.strip() for item in new_access_list if item.strip()]
-    username = input("Username: ")
-    password = input("Password: ")
-    # card_list = ["527166", "496287"]
-    # new_access_list = ["CONF MHC", "CONF 821"]
+    # card_list = (input("Card numbers: ")).split(", ")
+    # new_access_list = (input("New card access: ")).split(", ")    
+    # new_access_list = [item.strip() for item in new_access_list if item.strip()]
+    # username = input("Username: ")
+    # password = input("Password: ")
+    username = "01443182"
+    password = "Bgp1112@U"
+    card_list = ["496287"]
+    new_access_list = ["CONF 814"]
 
     # SQLHandler.create_server_connection()
     # SQLHandler.change_card(card_list[0], new_access_list, username)
 
-    # try:
-    #     with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
-    #         crawler.login()
-    #         print("Logging In succesful")
-    #         sleep(SleepTime)
-    #         print("Running")
-    #         crawler.run()
-    # except Exception as e:
-    #     print("There was a problem in the operation")
+    try:
+        with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
+            # crawler.login()
+            print("Logging In succesful")
+            sleep(SleepTime)
+            print("Running")
+            crawler.run()
+    except Exception as e:
+        print("There was a problem in the operation")

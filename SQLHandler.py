@@ -66,6 +66,7 @@ def update_card(server_connection, card_number, card_access, user):
     server_connection.commit()
 
 def fectch_changes():
+    print("Fetching changes")
     server_connection = create_server_connection()
     with server_connection.cursor() as cursor:
         query = f"SELECT * FROM {Table} WHERE Completed = 0"
@@ -81,31 +82,26 @@ def fectch_changes():
     for row in card_change_list:
         processed_info[row["CardID"]] = row["Access"]
 
-    threads = []
-
     for item in processed_info:
         current_access = processed_info[item]
         id_list = [k for k,v in processed_info.items() if v == current_access]
-        print(processed_info)
+        print("Processed Info 1: " + str(processed_info))
         for id in id_list:
             processed_info.pop(id)
-        print(processed_info)
-        
-        sender = AtriumOpt.AtriumCrawler(Username, AtriumPwd, id_list, current_access)
+        print("Processed Info 2: " + str(processed_info))
+
+        sender = AtriumOpt.AtriumCrawler(Username, AtriumPwd, id_list, current_access.split(", "))
         
         for id in id_list:
             with server_connection.cursor() as cursor:
                 query = f"UPDATE CardChange SET Completed = 1 WHERE CardID = \'{id}\'"
                 cursor.execute(query)
                 card_change_list = cursor.fetchall()
-            # Notifier.notify() // TODO: Implement notifications
-        
+            Notifier.notify("Card Change in Progress: ", f"Card {id} changed to access {current_access} by user {Username}", "", 0)
 
-        threads.append(threading.Thread(sender.run()))
-        threads[-1].start()
+        sender.run()
+        server_connection.commit()
 
-    for thread in threads:
-        thread.join()
     server_connection.close()
 
 while True:
