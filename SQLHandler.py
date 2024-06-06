@@ -3,7 +3,6 @@ import pandas as pd
 import configparser
 import pymysql
 import AtriumOpt
-import threading
 import Notifier
 
 config      = configparser.ConfigParser()
@@ -78,11 +77,10 @@ def fectch_changes():
     
     processed_info = dict()
         
-    # Iterate over each row
     for row in card_change_list:
         processed_info[row["CardID"]] = row["Access"]
 
-    for item in processed_info:
+    for item in list(processed_info):
         current_access = processed_info[item]
         id_list = [k for k,v in processed_info.items() if v == current_access]
         print("Processed Info 1: " + str(processed_info))

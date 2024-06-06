@@ -41,6 +41,7 @@ class AtriumCrawler:
         self.password = password
         self.card_list = card_list
         self.new_access_list = new_access_list
+        print(new_access_list)
         self.pages_accessed = []
         self.driver = webdriver.Safari()
         self.main_page = None
@@ -121,8 +122,9 @@ class AtriumCrawler:
         print("Finding people")
         self.main_page = self.driver.current_window_handle
         print("A")
-        element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, f"//a[@href='https://utah.atriumcampus.com/people']")))
-        element.click()
+        element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'People')]")))
+        self.driver.execute_script("arguments[0].click();", element)
+        # element.click()
         print("B")
 
         print("Initiating Access Search Bar")
@@ -154,7 +156,11 @@ class AtriumCrawler:
                 sleep(SleepTime)
                 username_field.send_keys(u'\ue007')
                 sleep(SleepTime)
-                WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,"//span[@class='name' and contains(text(), 'CONFERENCE')]"))).click()
+                # WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,"//span[@class='name' and contains(text(), 'CONFERENCE')]")))
+
+                element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,"//span[@class='name' and contains(text(), 'CONFERENCE')]")))
+                self.driver.execute_script("arguments[0].click();", element)
+
                 break
 
             except Exception as e:
@@ -197,22 +203,25 @@ class AtriumCrawler:
                     self.driver.find_element(By.XPATH, "//div[@id='access_groups']/p[@class='none_assigned']")
                     print("Tab: %s%s%s" % (color.green, tabs[i], color.default))
                     print("%sNo Access%s" % (color.blue, color.default))
-                    self.open_edit()
+                    # self.open_edit()
                 except NoSuchElementException:
                     return False
                 continue
 
     def open_edit(self):
         print("Initiating Open Edit")
-        try:
-            self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
-            # WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body"))).click()
-            sleep(SleepTime)
-            accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
-            print(accordion_buttons)
-            accordion_buttons[3].click()
-        except:
-            pass
+        try_count = 0 
+        while try_count < MAX_RETRYS:
+            try:
+                self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
+                sleep(SleepTime)
+                accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
+                accordion_buttons[3].click()
+                break
+            except:
+                try_count += 1
+                sleep(SleepTime)
+                continue
 
     def change_access(self):   
         print("Initiating Change Access") 
@@ -221,8 +230,8 @@ class AtriumCrawler:
         )
         rgt_opt_button = parent_div.find_element(By.XPATH, ".//button[contains(@class, 'rgt_opt')]")
         self.driver.execute_script("arguments[0].click();", rgt_opt_button) 
-        print(len(new_access_list))    
-        if (len(new_access_list) == 0 or new_access_list[0] == "None"):
+        print(len(self.new_access_list))    
+        if (len(self.new_access_list) == 0 or self.new_access_list[0] == "None"):
             WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,'//input[@value="Save"]'))).click()
             return
         for new_access in self.new_access_list:
@@ -276,6 +285,7 @@ if __name__ == "__main__":
     try:
         with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
             # crawler.login()
+            print(new_access_list)
             print("Logging In succesful")
             sleep(SleepTime)
             print("Running")
