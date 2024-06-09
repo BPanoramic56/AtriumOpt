@@ -35,16 +35,15 @@ class color:
 
 class AtriumCrawler:
 
-    def __init__(self, username, password, card_list, new_access_list):
+    def __init__(self, username, password):
         print("Initiating Constructor")
         self.username = username
         self.password = password
-        self.card_list = card_list
-        self.new_access_list = new_access_list
-        print(new_access_list)
         self.pages_accessed = []
         self.driver = webdriver.Safari()
         self.main_page = None
+        self.login()
+        self.open_people_tab()
 
     def __enter__(self):
         print("Initiating Driver")
@@ -118,7 +117,7 @@ class AtriumCrawler:
             return False
         return True
 
-    def access_search_bar(self):
+    def open_people_tab(self):
         print("Finding people")
         self.main_page = self.driver.current_window_handle
         print("A")
@@ -126,6 +125,8 @@ class AtriumCrawler:
         self.driver.execute_script("arguments[0].click();", element)
         # element.click()
         print("B")
+
+    def access_search_bar(self):
 
         print("Initiating Access Search Bar")
         sleep(SleepTime)
@@ -183,8 +184,10 @@ class AtriumCrawler:
             self.driver.switch_to.window(tabs[i])
 
             if tabs[i] == self.main_page:
+                print("MAIN")
                 continue
             if tabs[i] in self.pages_accessed:
+                print("ACCESSED")
                 continue
 
             try:
@@ -210,20 +213,19 @@ class AtriumCrawler:
 
     def open_edit(self):
         print("Initiating Open Edit")
-        try_count = 0 
-        while try_count < MAX_RETRYS:
-            try:
-                self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
-                sleep(SleepTime)
-                accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
-                accordion_buttons[3].click()
-                break
-            except:
-                try_count += 1
-                sleep(SleepTime)
-                continue
+        # try_count = 0 
+        # while try_count < MAX_RETRYS:
+        #     try:
+        self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
+        sleep(SleepTime)
 
-    def change_access(self):   
+        accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
+        print(len(accordion_buttons))
+        print(accordion_buttons[3])
+        accordion_buttons[3].click()
+        sleep(60)
+
+    def change_access(self):
         print("Initiating Change Access") 
         parent_div = WebDriverWait(self.driver, WaitTime).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'lft_rgt_opts') and contains(@class, 'bulk_move')]"))
@@ -248,10 +250,11 @@ class AtriumCrawler:
     def atrium_homepage(self): 
         self.driver.switch_to.window(self.main_page)
 
-    def run(self):
+    def run(self, card_list, new_access_list):
         print("Initiating Run")
+        self.card_list = card_list
+        self.new_access_list = new_access_list
         start_session = time()
-        self.login()
         for card in self.card_list:
             start_card = time()
             self.access_search_bar()
@@ -265,6 +268,14 @@ class AtriumCrawler:
             self.change_access()
             sleep(SleepTime)
             self.atrium_homepage()
+
+            # for page in self.pages_accessed:
+                # if page == self.main_page:
+                #     print("MAIN")
+                #     continue
+                # else:
+                #     self.driver.switch_to.window(page)
+                #     self.driver.close()
             print("%sCard took %.2f seconds%s" % (color.grey, time() - start_card, color.default))
         print("%sSession took %.2f seconds%s" % (color.grey, time() - start_session, color.default))
 
@@ -276,19 +287,19 @@ if __name__ == "__main__":
     # password = input("Password: ")
     username = "01443182"
     password = "Bgp1112@U"
-    card_list = ["496287"]
-    new_access_list = ["CONF 814"]
+    card_list = ["529062", "528608", "527922", "527096", "527760", "465054", "529043", "527115", "528607", "496185", "528588", "529078", "527106", "528605", "529177", "528606", "530519", "529053", "528595", "529067", "529061", "529058", "528613", "529798", "528633", "529783", "529799", "529070", "529066", "529046", "495494", "529034"]
+    new_access_list = ["CONF KAHLERT 3RD FLOOR 3301-3364"]
 
     # SQLHandler.create_server_connection()
     # SQLHandler.change_card(card_list[0], new_access_list, username)
 
     try:
-        with AtriumCrawler(username, password, card_list, new_access_list) as crawler:
+        with AtriumCrawler(username, password) as crawler:
             # crawler.login()
             print(new_access_list)
             print("Logging In succesful")
             sleep(SleepTime)
             print("Running")
-            crawler.run()
+            crawler.run(card_list, new_access_list)
     except Exception as e:
         print("There was a problem in the operation")
