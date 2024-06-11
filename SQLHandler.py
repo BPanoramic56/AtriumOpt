@@ -17,10 +17,10 @@ Username    = config["Atrium Information"]["Username"]
 AtriumPwd   = config["Atrium Information"]["Password"]
 
 def __init__(card, access, user):
-    connection = create_server_connection() 
-    time.sleep(2)
-    print(connection)
-    update_card(connection, card, access, user)
+    # connection = create_server_connection() 
+    # time.sleep(2)
+    # print(connection)
+    change_card(card, access, user)
 
 def create_server_connection():
     try:
@@ -47,7 +47,7 @@ def state_card_existence(server_connection, card_number):
         return False
 
 def change_card(card_number, card_access, user):
-    card_access = " - ".join(card_access)
+    # card_access = " - ".join(card_access)
     server_connection = create_server_connection()
     if (state_card_existence(server_connection, card_number)):
         update_card(server_connection, card_number, card_access, user)

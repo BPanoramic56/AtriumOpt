@@ -223,16 +223,15 @@ class AtriumCrawler:
         print(len(accordion_buttons))
         print(accordion_buttons[3])
         accordion_buttons[3].click()
-        sleep(60)
+        # sleep(60)
 
     def change_access(self):
         print("Initiating Change Access") 
-        parent_div = WebDriverWait(self.driver, WaitTime).until(
+        parent_div = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'lft_rgt_opts') and contains(@class, 'bulk_move')]"))
         )
         rgt_opt_button = parent_div.find_element(By.XPATH, ".//button[contains(@class, 'rgt_opt')]")
         self.driver.execute_script("arguments[0].click();", rgt_opt_button) 
-        print(len(self.new_access_list))    
         if (len(self.new_access_list) == 0 or self.new_access_list[0] == "None"):
             WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,'//input[@value="Save"]'))).click()
             return
