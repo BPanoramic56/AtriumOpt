@@ -27,11 +27,11 @@ logging.basicConfig(filename = "AtriumOptLogger.txt", filemode='w', format='%(na
 #endregion
 
 class color:
-    red = Back.RED
-    blue = Back.BLUE
-    green = Back.GREEN
-    grey = Back.LIGHTBLACK_EX
-    default = Back.RESET
+    red         = Back.RED
+    blue        = Back.BLUE
+    green       = Back.GREEN
+    grey        = Back.LIGHTBLACK_EX
+    default     = Back.RESET
 
 class AtriumCrawler:
 
@@ -157,7 +157,6 @@ class AtriumCrawler:
                 sleep(SleepTime)
                 username_field.send_keys(u'\ue007')
                 sleep(SleepTime)
-                # WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,"//span[@class='name' and contains(text(), 'CONFERENCE')]")))
 
                 element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,"//span[@class='name' and contains(text(), 'CONFERENCE')]")))
                 self.driver.execute_script("arguments[0].click();", element)
@@ -184,10 +183,8 @@ class AtriumCrawler:
             self.driver.switch_to.window(tabs[i])
 
             if tabs[i] == self.main_page:
-                print("MAIN")
                 continue
             if tabs[i] in self.pages_accessed:
-                print("ACCESSED")
                 continue
 
             try:

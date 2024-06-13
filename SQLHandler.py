@@ -17,9 +17,6 @@ Username    = config["Atrium Information"]["Username"]
 AtriumPwd   = config["Atrium Information"]["Password"]
 
 def __init__(card, access, user):
-    # connection = create_server_connection() 
-    # time.sleep(2)
-    # print(connection)
     change_card(card, access, user)
 
 def create_server_connection():
@@ -67,9 +64,8 @@ def update_card(server_connection, card_number, card_access, user):
         cursor.execute(query)
     server_connection.commit()
 
-def fectch_changes(sender):
+def fectch_changes(server_connection, sender):
     print("Fetching changes")
-    server_connection = create_server_connection()
     with server_connection.cursor() as cursor:
         query = f"SELECT * FROM {Table} WHERE Completed = 0"
         cursor.execute(query)
@@ -92,7 +88,6 @@ def fectch_changes(sender):
         print("Processed Info 2: " + str(processed_info))
 
         sender.run(id_list, current_access.split(", "))
-        # sender = AtriumOpt.AtriumCrawler(Username, AtriumPwd, id_list, current_access.split(", "))
         
         for id in id_list:
             with server_connection.cursor() as cursor:
@@ -111,8 +106,10 @@ if __name__ == "__main__":
 
     while True:
         start = time.time()
+        connection = create_server_connection()
+        
         for i in range(20):
             print (f"{i * '-'} {(20-i) * ' '} {int(i*100/20)+5}%", end = "\r")
             time.sleep(1)
         print("")
-        fectch_changes(sender)
+        fectch_changes(connection, sender)
