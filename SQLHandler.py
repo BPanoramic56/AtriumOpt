@@ -15,6 +15,7 @@ Database    = config["User Information"]["Database"]
 Table       = config["User Information"]["Table"]
 Username    = config["Atrium Information"]["Username"]
 AtriumPwd   = config["Atrium Information"]["Password"]
+QueryDelay  = int(config["Script Information"]["Query"])
 
 def __init__(card, access, user):
     change_card(card, access, user)
@@ -108,8 +109,8 @@ if __name__ == "__main__":
         start = time.time()
         connection = create_server_connection()
         
-        for i in range(20):
-            print (f"{i * '-'} {(20-i) * ' '} {int(i*100/20)+5}%", end = "\r")
+        for i in range(QueryDelay):
+            print (f"{i * '-'} {(20-i) * ' '} {int(i*100/QueryDelay)}%", end = "\r")
             time.sleep(1)
         print("")
         fectch_changes(connection, sender)

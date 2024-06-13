@@ -196,31 +196,25 @@ class AtriumCrawler:
                 for access in access_li:
                     print("\t%s%s%s" % (color.blue, access.text, color.default))
                 self.pages_accessed.append(tabs[i])
-                break
+                return set([x.text for x in access_li])
 
             except Exception as e:   
                 try:
                     self.driver.find_element(By.XPATH, "//div[@id='access_groups']/p[@class='none_assigned']")
                     print("Tab: %s%s%s" % (color.green, tabs[i], color.default))
                     print("%sNo Access%s" % (color.blue, color.default))
-                    # self.open_edit()
                 except NoSuchElementException:
                     return False
                 continue
 
     def open_edit(self):
         print("Initiating Open Edit")
-        # try_count = 0 
-        # while try_count < MAX_RETRYS:
-        #     try:
         self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
         sleep(SleepTime)
 
         accordion_buttons = self.driver.find_elements(By.CLASS_NAME, "accordion-button")
-        print(len(accordion_buttons))
         print(accordion_buttons[3])
         accordion_buttons[3].click()
-        # sleep(60)
 
     def change_access(self):
         print("Initiating Change Access") 
@@ -257,7 +251,10 @@ class AtriumCrawler:
             sleep(SleepTime)
             self.open_card(card)
             sleep(SleepTime)
-            self.find_access(card)
+            access = self.find_access(card)
+            if (access == set(new_access_list)):
+                self.atrium_homepage()
+                continue
             sleep(SleepTime)
             self.open_edit()
             sleep(SleepTime)
@@ -265,13 +262,6 @@ class AtriumCrawler:
             sleep(SleepTime)
             self.atrium_homepage()
 
-            # for page in self.pages_accessed:
-                # if page == self.main_page:
-                #     print("MAIN")
-                #     continue
-                # else:
-                #     self.driver.switch_to.window(page)
-                #     self.driver.close()
             print("%sCard took %.2f seconds%s" % (color.grey, time() - start_card, color.default))
         print("%sSession took %.2f seconds%s" % (color.grey, time() - start_session, color.default))
 
