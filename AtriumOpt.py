@@ -15,13 +15,13 @@ from selenium.webdriver.common.keys import Keys
 
 import logging
 URL = r"https://utah.atriumcampus.com"
-MAX_RETRYS = 3
 
 config      = configparser.ConfigParser()
 config.read("configurations.ini")
 SleepTime   = int(config["Script Information"]["Sleep"])
 WaitTime    = int(config["Script Information"]["Wait"])
 ErrorTime   = int(config["Script Information"]["Error"])
+MAX_RETRYS  = int(config["Script Information"]["Retrys"])
 
 logging.basicConfig(filename = "AtriumOptLogger.txt", filemode='w', format='%(name)s - %(levelname)s - %(message)s', level=logging.DEBUG)
 #endregion
@@ -36,6 +36,13 @@ class color:
 class AtriumCrawler:
 
     def __init__(self, username, password):
+        """
+            Creates the AtriumOpt instance and sets all main constants, logging into your Atrium account setting up the Driver into the people's tab
+        Args:
+            username (string): Your Atrium username
+            password (string): Your Atrium password
+        """
+
         print("Initiating Constructor")
         self.username = username
         self.password = password
@@ -54,7 +61,11 @@ class AtriumCrawler:
         if self.driver:
             self.driver.quit()
 
-    def login(self):        
+    def login(self):
+        """
+            Initates the driver and gets the URL, logging in with the given information in the config file
+        """
+
         print("Initiating Login")
         self.driver.get(URL)
         self.driver.maximize_window()
@@ -107,9 +118,12 @@ class AtriumCrawler:
                     self.driver.close()
                     exit()
                 continue
-        return self
     
     def check_login_error(self):
+        """
+            DEPRECATED
+        """
+
         print("Initiating Check Login Error")
         try:
             self.driver.find_element(By.XPATH, "//div[@id='notice' and contains(text(), 'information')]")
@@ -118,18 +132,22 @@ class AtriumCrawler:
         return True
 
     def open_people_tab(self):
+        """
+            Finds and clicks on the "People" Atrium tab
+        """
+
         print("Finding people")
         self.main_page = self.driver.current_window_handle
-        print("A")
         element = WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH, "//*[contains(text(), 'People')]")))
         self.driver.execute_script("arguments[0].click();", element)
-        # element.click()
-        print("B")
 
     def access_search_bar(self):
+        """
+            Finds and clicks on the dropdown menu and changes it to ID for SC Cards
+        """
 
         print("Initiating Access Search Bar")
-        sleep(SleepTime)
+        # sleep(SleepTime)
         retry_count = 0
         while retry_count < MAX_RETRYS:
             try:
@@ -141,12 +159,14 @@ class AtriumCrawler:
                 print(f"Trouble when accesing and choosing ID in drop-down search bar\nRestarting operation ({retry_count})\nError source: {e}")
                 sleep(ErrorTime)
                 continue
-        if (retry_count == MAX_RETRYS):
-            print("Operation failed, exit code: -1\nExiting system")
-            self.driver.close()
-            exit()
     
     def open_card(self, card_number):
+        """
+            Writes the desired card number and opens it
+        Args:
+            card_number (int): The specified card to be looked at/modified
+        """
+
         print("Initiating Open Card")
         retry_count = 0
         while retry_count < MAX_RETRYS:
@@ -174,6 +194,16 @@ class AtriumCrawler:
             return
 
     def find_access(self, card):
+        """
+            Finds and prints the access of the current open card, returning it in a set format
+        Args:
+            card (int): The CardID to be searched
+
+        Returns:
+            set: Contains all the access this card contains, or None if the card has no access
+            bool: If the access cannot be found at all, returns False, indicating some type of error in the Driver
+        """
+
         print("Initiating Find Access")
         tabs = self.driver.window_handles
 
@@ -203,11 +233,15 @@ class AtriumCrawler:
                     self.driver.find_element(By.XPATH, "//div[@id='access_groups']/p[@class='none_assigned']")
                     print("Tab: %s%s%s" % (color.green, tabs[i], color.default))
                     print("%sNo Access%s" % (color.blue, color.default))
+                    return set(["None"])
                 except NoSuchElementException:
                     return False
-                continue
 
     def open_edit(self):
+        """
+            Opens the edit page of the current open card and opens the Access accordion button
+        """
+
         print("Initiating Open Edit")
         self.driver.execute_script("arguments[0].click();", WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.ID,"edit_icon_body")))) 
         sleep(SleepTime)
@@ -217,6 +251,10 @@ class AtriumCrawler:
         accordion_buttons[3].click()
 
     def change_access(self):
+        """
+            Changes the access of the current open card
+        """
+
         print("Initiating Change Access") 
         parent_div = WebDriverWait(self.driver, 2).until(
             EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'lft_rgt_opts') and contains(@class, 'bulk_move')]"))
@@ -237,10 +275,18 @@ class AtriumCrawler:
                     option.click()
         WebDriverWait(self.driver, WaitTime).until(EC.element_to_be_clickable((By.XPATH,'//input[@value="Save"]'))).click()
 
-    def atrium_homepage(self): 
+    def atrium_homepage(self):
+        """
+            Returns to the Atrium main page
+        """
+
         self.driver.switch_to.window(self.main_page)
 
     def run(self, card_list, new_access_list):
+        """
+            Utilizes all methods in this class to change access to several cards, called "batch access change"
+        """
+
         print("Initiating Run")
         self.card_list = card_list
         self.new_access_list = new_access_list
@@ -266,22 +312,13 @@ class AtriumCrawler:
         print("%sSession took %.2f seconds%s" % (color.grey, time() - start_session, color.default))
 
 if __name__ == "__main__":
-    # card_list = (input("Card numbers: ")).split(", ")
-    # new_access_list = (input("New card access: ")).split(", ")    
-    # new_access_list = [item.strip() for item in new_access_list if item.strip()]
-    # username = input("Username: ")
-    # password = input("Password: ")
-    username = "01443182"
-    password = "Bgp1112@U"
-    card_list = ["529062", "528608", "527922", "527096", "527760", "465054", "529043", "527115", "528607", "496185", "528588", "529078", "527106", "528605", "529177", "528606", "530519", "529053", "528595", "529067", "529061", "529058", "528613", "529798", "528633", "529783", "529799", "529070", "529066", "529046", "495494", "529034"]
+    username = ""
+    password = ""
+    card_list = []
     new_access_list = ["CONF KAHLERT 3RD FLOOR 3301-3364"]
-
-    # SQLHandler.create_server_connection()
-    # SQLHandler.change_card(card_list[0], new_access_list, username)
 
     try:
         with AtriumCrawler(username, password) as crawler:
-            # crawler.login()
             print(new_access_list)
             print("Logging In succesful")
             sleep(SleepTime)
